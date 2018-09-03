@@ -1,49 +1,49 @@
 <template>
+
   <div class="users">
-    <h1>Users</h1>
-    <form v-on:submit="addUser">
-      <input type="text" v-model="newUser.name" placeholder="Enter Name" />
-      <br />
-      <input type="text" v-model="newUser.email" placeholder="Enter Email" />
-      <br />
-      <input type="submit" value="Submit" />
-    </form>
-    <ul>
-      <li v-for="user in users">
-        <input type="checkbox" class="toggle" v-model="user.contacted" />
-        <span :class="{contacted: user.contacted}">
-          {{user.name}}: {{user.email}} <button v-on:click="deleteUser(user)">x</button>
-        </span>
-      </li>
-    </ul>
-    <ul>
-      <li v-for="account in accounts">
-        <input type="checkbox" class="toggle" v-model="account.contacted" />
-        <span :class="{contacted: account.contacted}">
-          {{account.id}}: {{account.firstName}}: {{account.secondName}}: {{account.accountNum}} <button v-on:click="deleteAccount(account)">x</button>
-        </span>
-      </li>
-    </ul>
-    <b-form-checkbox v-model="striped">Striped</b-form-checkbox>
-    <b-form-checkbox v-model="bordered">Bordered</b-form-checkbox>
-    <b-form-checkbox v-model="outlined">Outlined</b-form-checkbox>
-    <b-form-checkbox v-model="small">Small</b-form-checkbox>
-    <b-form-checkbox v-model="hover">Hover</b-form-checkbox>
-    <b-form-checkbox v-model="dark">Dark</b-form-checkbox>
-    <b-form-checkbox v-model="fixed">Fixed</b-form-checkbox>
-    <b-form-checkbox v-model="footClone">Foot Clone</b-form-checkbox>
+
 
     <b-table :striped="striped"
-            :bordered="bordered"
             :outlined="outlined"
-            :small="small"
             :hover="hover"
-            :dark="dark"
-            :fixed="fixed"
-            :foot-clone="footClone"
-            :items="accounts">
+            :items="accounts"
+            :fields="fields">
+
+            <template slot="edit"  slot-scope="row">
+              <b-button size="sm" @click = "showModal(row.item.id, row.item.firstname, row.item.lastname, row.item.accountno)">Edit</b-button>
+            </template>
+
+            <template slot="delete" slot-scope="row">
+              <b-button size="sm" @click.stop="deleteAccount(row.item)" >Delete</b-button>
+            </template>
 
     </b-table>
+
+    <b-modal id = "updateModal" ref = "myModalRef" hide-footer title = "Update Account">
+    <h3>{{accounts.accountno}}</h3>
+    <b-container fluid>
+        <b-row class = "my-1">
+            <b-col sm="2" place><label for="input-default">First Name:</label></b-col>
+            <b-col sm="10">
+                <b-form-input id="input-default" type="text" placeholder="Edit first name" name = "firstName" v-model="view_account.firstname"></b-form-input>
+            </b-col>
+        </b-row>
+            <b-row class = "my-1">
+            <b-col sm="2" place><label for="input-default">Surname:</label></b-col>
+            <b-col sm="10">
+                <b-form-input id="input-default" type="text" placeholder="Edit surname" name = "surname" v-model="view_account.surname"></b-form-input>
+            </b-col>
+        </b-row>
+        <b-row class = "my-1">
+            <b-col sm="2" place><label for="input-default">Account Number:</label></b-col>
+            <b-col sm="10">
+                <b-form-input id="input-default" type="text" placeholder="Edit account number" name = "accountno" v-model="view_account.accountno"></b-form-input>
+            </b-col>
+        </b-row>
+        <b-button @click="updateMethod">Update Account</b-button>
+    </b-container>
+</b-modal>
+
   </div>
 </template>
 
@@ -58,33 +58,68 @@ import axios from 'axios';
       return {
         newUser: {},
         users: [],
+        view_account:{
+            id:'',
+            firstname: '',
+            surname: '',
+            accountno: ''
+        },
 
+        fields: [
+          {key: 'firstname',
+          sortable: true
+          },
+
+          {key:'lastname',
+          sortable: true
+          },
+
+          {key:'accountno',
+          sortable: true
+          },
+
+          {key:'edit'
+          },
+
+          {key:'delete'
+          }],
         accounts: [],
-        striped: false,
-        bordered: false,
-        outlined: false,
-        small: false,
-        hover: false,
-        dark: false,
-        fixed: false,
-        footClone: false
-
+        striped: true,
+        outlined: true,
+        hover: true,
+        edit_data: {content: ''}
       }
     },
     methods: {
-      addUser: function(e){
-        this.users.push({
-          name : this.newUser.name,
-          email: this.newUser.email,
-          contacted: false
-        });
-        e.preventDefault();
+      // edit_account: function(item){
+      //   this.edit_data.content = JSON.stringify(item)
+      // },
+      deleteAccount: function(item){
+        //console.log("Hello")
+         axios.delete('http://localhost:8080/account/'+item.id),
+         alert("Item deleted"),
+         window.location.reload();
       },
-      deleteUser: function(user){
-        this.users.splice(this.users.indexOf(user),1)
+      showModal(id, firstname, surname, accountno) {
+          this.view_account.id = id;
+          this.view_account.firstname = firstname;
+          this.view_account.surname = surname;
+          this.view_account.accountno = accountno;
+          this.$refs.myModalRef.show();
       },
-      deleteAccount: function(account){
-        this.accounts.splice(this.accounts.indexOf(account),1)
+      updateMethod() {
+        let self = this;
+        var id = this.id;
+            console.log(id);
+        axios.put('http://localhost:8080/account' + id, {
+            id: self.view_account.id,
+            accountno:self.view_account.accountno,
+            firstname :self.view_account.firstname,
+            lastname :self.view_account.surname
+        }),
+        this.$refs.myModalRef.hide();
+        //window.location.reload();
+
       }
     },
     created: function(){
