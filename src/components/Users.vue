@@ -111,13 +111,14 @@ import axios from 'axios';
         let self = this;
         var id = this.id;
             console.log(id);
-        axios.put('http://localhost:8080/account' + id, {
+        axios.put('http://localhost:8080/account/' + id, {
             id: self.view_account.id,
             accountno:self.view_account.accountno,
             firstname :self.view_account.firstname,
             lastname :self.view_account.surname
         }),
         this.$refs.myModalRef.hide();
+        window.location.reload();
         //window.location.reload();
 
       }
